@@ -4,10 +4,12 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "Creativity is intelligence having fun.", category: "Inspiration" }
 ];
 
+// Save to localStorage
 function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
 
+// Show a random quote
 function showRandomQuote() {
   const quoteDisplay = document.getElementById("quoteDisplay");
   const selectedCategory = localStorage.getItem("lastCategoryFilter") || "all";
@@ -27,6 +29,7 @@ function showRandomQuote() {
   sessionStorage.setItem("lastQuote", JSON.stringify(quote));
 }
 
+// Add a new quote
 function addQuote() {
   const text = document.getElementById("newQuoteText").value.trim();
   const category = document.getElementById("newQuoteCategory").value.trim();
@@ -39,9 +42,7 @@ function addQuote() {
   const newQuote = { text, category };
   quotes.push(newQuote);
   saveQuotes();
-
-  // Simulate pushing to server
-  simulatePostToServer(newQuote);
+  postQuoteToServer(newQuote); // simulate sending to server
 
   populateCategories();
   showRandomQuote();
@@ -50,17 +51,70 @@ function addQuote() {
   document.getElementById("newQuoteCategory").value = "";
 }
 
-function createAddQuoteForm() {
-  const form = document.createElement("div");
-  form.innerHTML = `
-    <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
-    <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
-    <button id="addQuoteBtn">Add Quote</button>
-  `;
-  document.body.appendChild(form);
-  document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
+// Simulated POST to server
+function postQuoteToServer(quote) {
+  console.log("Posting to server (simulated):", quote);
+  // Mock API - just simulate post
+  return fetch("https://jsonplaceholder.typicode.com/posts", {
+    method: "POST",
+    body: JSON.stringify(quote),
+    headers: {
+      "Content-type": "application/json; charset=UTF-8"
+    }
+  }).then(res => res.json());
 }
 
+// Simulated FETCH from server
+function fetchQuotesFromServer() {
+  // Simulate getting quotes from a mock API
+  return new Promise(resolve => {
+    const mockQuotes = [
+      { text: "Stay hungry, stay foolish.", category: "Inspiration" },
+      { text: "Do one thing every day that scares you.", category: "Motivation" }
+    ];
+    setTimeout(() => resolve(mockQuotes), 1000);
+  });
+}
+
+// Sync quotes with server (main function)
+function syncQuotes() {
+  fetchQuotesFromServer().then(serverQuotes => {
+    let updated = false;
+
+    serverQuotes.forEach(serverQuote => {
+      const exists = quotes.some(local =>
+        local.text === serverQuote.text &&
+        local.category === serverQuote.category
+      );
+      if (!exists) {
+        quotes.push(serverQuote);
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      saveQuotes();
+      populateCategories();
+      showRandomQuote();
+      displayConflictNotification("Quotes updated from server.");
+    }
+  });
+}
+
+// Show user notification
+function displayConflictNotification(message) {
+  const box = document.createElement("div");
+  box.innerText = message;
+  box.style.background = "#f9edbe";
+  box.style.border = "1px solid #f0c36d";
+  box.style.padding = "0.5em";
+  box.style.marginTop = "1em";
+  box.style.color = "#222";
+  document.body.insertBefore(box, document.getElementById("quoteDisplay"));
+  setTimeout(() => box.remove(), 5000);
+}
+
+// Populate category filter dropdown
 function populateCategories() {
   const filter = document.getElementById("categoryFilter");
   const selected = localStorage.getItem("lastCategoryFilter") || "all";
@@ -77,68 +131,18 @@ function populateCategories() {
   });
 }
 
+// Filter quotes by category
 function filterQuotes() {
   const selected = document.getElementById("categoryFilter").value;
   localStorage.setItem("lastCategoryFilter", selected);
   showRandomQuote();
 }
 
-// Simulated server fetch (every 10 seconds)
-function syncWithServer() {
-  console.log("Syncing with mock server...");
-
-  simulateFetchFromServer().then(serverQuotes => {
-    let newQuotes = [];
-
-    serverQuotes.forEach(serverQuote => {
-      if (!quotes.some(local => local.text === serverQuote.text && local.category === serverQuote.category)) {
-        newQuotes.push(serverQuote);
-      }
-    });
-
-    if (newQuotes.length > 0) {
-      quotes.push(...newQuotes);
-      saveQuotes();
-      populateCategories();
-      showRandomQuote();
-      notifyUser("New quotes synced from server.");
-    }
-  });
-}
-
-// Notification message
-function notifyUser(message) {
-  const note = document.createElement("div");
-  note.innerText = message;
-  note.style.background = "#ddf";
-  note.style.padding = "0.5em";
-  note.style.margin = "1em 0";
-  document.body.insertBefore(note, document.getElementById("quoteDisplay"));
-  setTimeout(() => note.remove(), 5000);
-}
-
-// Simulate fetch from server
-function simulateFetchFromServer() {
-  return new Promise(resolve => {
-    const mockServerQuotes = [
-      { text: "Stay hungry, stay foolish.", category: "Inspiration" },
-      { text: "Do one thing every day that scares you.", category: "Motivation" }
-    ];
-    setTimeout(() => resolve(mockServerQuotes), 1000);
-  });
-}
-
-// Simulate post to server (log only)
-function simulatePostToServer(quote) {
-  console.log("Pushed to server (simulated):", quote);
-}
-
-// JSON Import/Export
+// Export quotes as JSON
 function exportToJsonFile() {
   const json = JSON.stringify(quotes, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement("a");
   a.href = url;
   a.download = "quotes.json";
@@ -148,6 +152,7 @@ function exportToJsonFile() {
   URL.revokeObjectURL(url);
 }
 
+// Import quotes from file
 function importFromJsonFile(event) {
   const fileReader = new FileReader();
   fileReader.onload = function (event) {
@@ -167,24 +172,16 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// Initialize App
+// Initialize everything
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
   document.getElementById("categoryFilter").addEventListener("change", filterQuotes);
   document.getElementById("exportQuotesBtn").addEventListener("click", exportToJsonFile);
   document.getElementById("importFile").addEventListener("change", importFromJsonFile);
 
-  createAddQuoteForm();
   populateCategories();
+  showRandomQuote();
 
-  const last = sessionStorage.getItem("lastQuote");
-  if (last) {
-    const quote = JSON.parse(last);
-    document.getElementById("quoteDisplay").innerText = `"${quote.text}" — ${quote.category}`;
-  } else {
-    showRandomQuote();
-  }
-
-  // Start periodic server sync
-  setInterval(syncWithServer, 10000);
+  // Start syncing every 15 seconds
+  setInterval(syncQuotes, 15000);
 });
