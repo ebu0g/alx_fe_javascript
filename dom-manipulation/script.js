@@ -77,29 +77,45 @@ function fetchQuotesFromServer() {
 }
 
 // Sync quotes with server (main function)
-function syncQuotes() {
-  fetchQuotesFromServer().then(serverQuotes => {
-    let updated = false;
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+  let updated = false;
 
-    serverQuotes.forEach(serverQuote => {
-      const exists = quotes.some(local =>
-        local.text === serverQuote.text &&
-        local.category === serverQuote.category
-      );
-      if (!exists) {
-        quotes.push(serverQuote);
-        updated = true;
-      }
-    });
-
-    if (updated) {
-      saveQuotes();
-      populateCategories();
-      showRandomQuote();
-      displayConflictNotification("Quotes updated from server.");
+  serverQuotes.forEach(serverQuote => {
+    const exists = quotes.some(local =>
+      local.text === serverQuote.text &&
+      local.category === serverQuote.category
+    );
+    if (!exists) {
+      quotes.push(serverQuote);
+      updated = true;
     }
   });
+
+  if (updated) {
+    saveQuotes();
+    populateCategories();
+    showRandomQuote();
+    displayConflictNotification("Quotes synced from server.");
+  }
 }
+
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      body: JSON.stringify(quote),
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8"
+      }
+    });
+    const result = await response.json();
+    console.log("Simulated post result:", result);
+  } catch (error) {
+    console.error("Failed to post quote:", error);
+  }
+}
+
 
 // Show user notification
 function displayConflictNotification(message) {
