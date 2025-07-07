@@ -8,20 +8,15 @@
 <body>
   <h1>Dynamic Quote Generator</h1>
 
-  <!-- Quote display and buttons -->
-  <div id="quoteDisplay" style="margin-bottom: 1em; font-size: 1.2em;"></div>
-  <button id="newQuote">Show New Quote</button>
-
-  <!-- Export Quotes Button (MUST be present in HTML for checker) -->
-  <button id="exportQuotesBtn">Export Quotes</button>
-
-  <!-- Import Quotes File Input -->
-  <input type="file" id="importFile" accept=".json" />
-
-  <!-- Category Filter (optional: will be populated dynamically) -->
   <select id="categoryFilter">
     <option value="all">All Categories</option>
   </select>
+
+  <div id="quoteDisplay" style="margin: 1em 0; font-size: 1.2em;"></div>
+  <button id="newQuote">Show New Quote</button>
+
+  <button id="exportQuotesBtn">Export Quotes</button>
+  <input type="file" id="importFile" accept=".json" />
 
   <script src="script.js"></script>
 </body>
